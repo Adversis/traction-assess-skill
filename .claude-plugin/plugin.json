@@ -1,0 +1,8 @@
+{
+  "name": "traction-assess",
+  "version": "0.1.0",
+  "description": "TRACTION product security maturity assessment for codebases",
+  "author": { "name": "Adversis", "email": "hello@adversis.io" },
+  "homepage": "https://www.adversis.io/traction",
+  "license": "MIT"
+}
