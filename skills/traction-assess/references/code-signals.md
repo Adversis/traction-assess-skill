@@ -525,6 +525,16 @@ opt.?out.*ai|ai.*opt.?out|training.*consent|ai.*consent|data.*ai.*polic
 model.?hash|model.?sign|model.?version|model.?registry|model.?provenance|hugging.?face.*token
 tool.?call|function.?call|agent.*tool|tool.?use|mcp|model.?context.?protocol|tool.?permiss
 context.?window|memory.*persist|conversation.?history|context.?isolat|memory.*tenant
+# IBAC / intent-based access
+ibac|intent.?based.?access|authorization.?tuple|access.?control.?tuple
+# Memory poisoning defense
+memory.?poison|context.?tamper|context.?integrit|memory.?integrit
+# Information remnance
+remnance|data.?persist.*model|provider.?log.*retention
+# RAG patterns (common API consumer pattern)
+rag|retrieval.?augment|vector.?store|embedding|chunk|semantic.?search
+# Provider-specific patterns (API consumers)
+bedrock|azure.?openai|vertex.?ai|together.?ai|groq|replicate|fireworks
 ```
 
 ### Glob Patterns
@@ -543,26 +553,27 @@ context.?window|memory.*persist|conversation.?history|context.?isolat|memory.*te
 
 ### Dependency Signals
 - **LLM frameworks**: `langchain`, `llama-index`, `semantic-kernel`, `autogen`, `crewai`, `openai`, `anthropic`, `@google/generative-ai`
-- **Guardrails**: `guardrails-ai`, `nemo-guardrails`, `rebuff`, `llm-guard`, `openai-moderation`
-- **Observability**: `langsmith`, `langfuse`, `helicone`, `promptlayer`, `weights-and-biases`
-- **Vector stores**: `pinecone`, `chromadb`, `weaviate`, `qdrant`, `pgvector`
-- **Agent frameworks**: `@modelcontextprotocol/*`, `autogen`, `crewai`, `langchain-agents`
+- **Guardrails**: `guardrails-ai`, `nemo-guardrails`, `rebuff`, `llm-guard`, `openai-moderation`, `promptfoo` (adversarial testing)
+- **Observability**: `langsmith`, `langfuse`, `helicone`, `promptlayer`, `weights-and-biases`, `@braintrust/core`, `arize-phoenix`, `traceloop-sdk`
+- **RAG/Vector**: `pinecone`, `@pinecone-database/pinecone`, `chromadb`, `weaviate`, `weaviate-ts-client`, `qdrant`, `@qdrant/js-client-rest`, `pgvector`
+- **Agent frameworks**: `@modelcontextprotocol/*`, `autogen`, `crewai`, `langchain-agents`, `@anthropic-ai/sdk` (tool_use), `openai` (function_calling), `vercel/ai`
+- **FGA (Fine-Grained Authorization)**: `@openfga/sdk`, `permify`, `@authzed/authzed-node`
 
 ### Level Evidence Map
 
 | Control | L1 | L2 | L3 | L4 |
 |---------|----|----|----|----|
-| 11.1 Training Data | Data source documented | Data provenance tracking, PII filtering | Consent-based training data, opt-out mechanism | Customer-controlled training data, no cross-tenant training |
-| 11.2 Model Config | Hardcoded model parameters | Configurable temperature/model per use case | Per-tenant model configuration, model selection | Customer-managed model deployment, private model hosting |
+| 11.1 AI Data Governance | Data source documented, privacy policy mentioning AI, data processing disclosure page. For API consumers: provider DPA on file, documented no-training policy | Data provenance tracking, PII filtering. For API consumers: contractual opt-out, provider data handling confirmed | Consent-based training data, opt-out mechanism. For API consumers: dedicated endpoints, VPC-scoped access | Customer-controlled training data, no cross-tenant training, full audit trail |
+| 11.2 Model Config | Hardcoded model parameters | Configurable temperature/model per use case. For API consumers: model version pinning, provider selection | Per-tenant model configuration, model selection. For API consumers: RAG config, custom system prompts, fine-tuning | Customer-managed model deployment, private model hosting. For API consumers: provisioned throughput, dedicated capacity |
 | 11.3 AI Observability | Basic input/output logging | Structured prompt/completion logging (Langfuse, Langsmith) | Per-tenant AI audit trail, cost tracking | Customer-accessible AI usage dashboard, exportable AI logs |
 | 11.4 Output Safety | Basic content filtering | Guardrails library integration, moderation API | Multi-layer safety (input + output filters, context grounding) | Customer-configurable safety policies, domain-specific filters |
 | 11.5 Human Oversight | Manual review available | Approval workflows for high-risk actions | Configurable escalation rules, human-in-the-loop options | Customer-defined oversight policies, kill switch |
-| 11.6 Input Security | Basic input length limits | Prompt injection detection (LLM Guard, Rebuff) | System prompt isolation, input/output separation | Adversarial testing, automated red-teaming, certified resilience |
+| 11.6 Input Security | Basic input length limits | Prompt injection detection (LLM Guard, Rebuff) | System prompt isolation, input/output separation | Adversarial testing (promptfoo), automated red-teaming, certified resilience |
 | 11.7 AI Transparency | AI usage mentioned in ToS | Model card or AI disclosure page | Per-feature AI disclosure, data processing transparency | Customer-auditable AI pipeline, explainability APIs |
 | 11.8 AI Data Rights | Documented AI data policy | Opt-out from AI training | Granular consent per AI feature | Customer-controlled data boundaries, contractual AI data terms |
-| 11.9 Model Supply Chain | Using known model providers | Model versioning, pinned model versions | Model integrity verification, SBOM for models | Customer-managed model selection, signed model artifacts |
-| 11.10 Agent Auth & Tool Control | Tools hardcoded, no scope limits | Tool allowlist per agent, basic permission checks | Per-tenant tool authorization, scope restrictions | Customer-managed tool policies, audit trail per tool invocation |
-| 11.11 Memory & Context | No persistent memory, or undocumented | Conversation history with TTL | Per-tenant context isolation, memory boundaries | Customer-managed memory policies, verifiable context isolation |
+| 11.9 Model Supply Chain | Using known model providers. For API consumers: package.json/requirements.txt with pinned model SDK versions, provider list in docs | Model versioning, pinned model versions. For API consumers: provider deprecation policy awareness, sunset timeline tracking | Model integrity verification, SBOM for models. For API consumers: model version pinning, testing against new provider versions | Customer-managed model selection, signed model artifacts |
+| 11.10 Agent Auth & Tool Control | Tools hardcoded, no scope limits | Tool allowlist per agent, basic permission checks, IBAC authorization tuples. Tool allowlist config, permission checks before tool execution, MCP server with restricted tools | Per-tenant tool authorization, scope restrictions, delegation trust chains with TTL-based expiry | Customer-managed tool policies via fine-grained authorization engines (OpenFGA), audit trail per tool invocation |
+| 11.11 Memory & Context | No persistent memory, or undocumented | Conversation history with TTL, tenant ID in conversation context, system prompt separation. TTL on memory/context stores | Per-tenant context isolation, memory boundaries, memory poisoning defenses, encrypted context | Customer-managed memory policies, verifiable context isolation, customer-managed encryption keys |
 
 ---
 

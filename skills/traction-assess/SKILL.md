@@ -82,7 +82,7 @@ For each domain:
 4. Read relevant files found to understand implementation depth
 5. Record findings: what was found, where, and what level it indicates
 
-Parallelize across domains within each theme group where possible. Use Task agents to assess multiple domains concurrently.
+Parallelize across domains within each theme group where possible. Use parallel Grep and Glob calls to search for multiple domain patterns concurrently within each theme group, or use the Agent tool (subagent_type: "general-purpose") to assess independent domains in parallel.
 
 ### Phase 4: Score and Calculate
 
@@ -264,6 +264,10 @@ Common edge cases and how to handle them:
 | Internal tool | Controls 3.5, 3.6 (consumer auth), 1.5 (consumer privacy) → N/A. Tier thresholds still apply to remaining controls. |
 | Monorepo | Scope the assessment to one product/service boundary. State scope in `productName`. |
 | Frontend-only repo | Infrastructure controls (Domain 8) likely not assessable from this repo. Note as "Evidence not available in this codebase — may exist in separate infra repo." Score 0, not N/A. |
+| API consumer only (no training) | 11.1 L3 "isolated training pipelines" likely N/A for self-hosted training. Focus on provider DPAs, data handling policies. Score based on API consumer criteria in the reference. |
+| RAG-based product | 11.1 scores based on vector store data governance. 11.11 memory controls apply to retrieval context. Check for embedding pipeline security. |
+| Multi-model / multi-provider | 11.9 supply chain controls are critical. Check for provider fallback strategies, version pinning across providers. |
+| Agentic AI with tool use | 11.10 and 11.11 are critical differentiators. Check for tool authorization patterns, IBAC, delegation trust chains. |
 
 ## Handling Ambiguous Findings
 
@@ -273,6 +277,19 @@ When search patterns return ambiguous results:
 2. **Read surrounding code** — Look at the function/class to determine intent.
 3. **Exclude test fixtures and node_modules** — Focus on `src/`, `app/`, `lib/`, and infrastructure files.
 4. **Note uncertainty** — When a finding could go either way, note it: "Found `export` in `src/data/handler.ts` — appears to be data export based on CSV generation logic, but could be module export. Scored as L2 conservatively."
+
+## AI Bridge Domain Guidance
+
+When assessing Domain 11, check for consistency with foundational domains. AI controls build on existing security architecture — a high AI score with weak foundations is suspicious.
+
+| AI Control | Depends On | Consistency Check |
+|------------|-----------|-------------------|
+| 11.10 Agent Authorization | Domain 4 (Authz) | Agent authorization can't meaningfully exceed the underlying authorization architecture. If Domain 4 is L1, 11.10 at L3 is suspicious. |
+| 11.1 AI Data Governance | Domain 1 (Data Controls) | AI data governance builds on data export, deletion, and residency controls. Check that data rights apply to AI-processed data too. |
+| 11.3 AI Observability | Domain 2 (Observability) | AI observability extends audit logging infrastructure. If audit logs (2.1) are L1, AI observability at L3 is unlikely. |
+| 11.* (all AI) | Domain 3 (Auth) | AI features need the same SSO, MFA, and session security as the rest of the product. AI endpoints without auth are a critical gap. |
+
+When you find a disparity (e.g., Domain 4 at L1 but 11.10 at L3), note it in the evidence and verify the AI control score isn't inflated.
 
 ## Tier Reference
 
@@ -302,4 +319,4 @@ Consult these files during Phase 3 for full control definitions and level criter
 
 ## Example Output
 
-See `examples/sample-output.json` for a complete example assessment JSON output and `examples/sample-terminal-report.md` for the corresponding terminal report format.
+See `examples/sample-output.json` for a complete example assessment JSON output (AI excluded) and `examples/sample-output-ai.json` for an example with Domain 11 AI controls assessed. See `examples/sample-terminal-report.md` for the corresponding terminal report format.
